@@ -1,21 +1,25 @@
 import express, { 
   Express,
-  Request,
-  Response,
 } from 'express';
 import myDataSourceConfig  from './config/datasource';
-import dotenv from 'dotenv';
+import router from './routes/routes';
+require('dotenv/config');
 
-dotenv.config();
-myDataSourceConfig;
+class Application {
+  app: Express = express();
+  
+  bootstrap(port: number) {
+    const PORT = process.env.PORT || port;
 
+    this.app.listen(PORT, () => console.log(`Server Running 🔥 On Port:${PORT} | http://localhost:3000`));    
+    this.appConfig();
+  }
+  
+  appConfig() {
+    myDataSourceConfig;
+    this.app.use(express.json());
+    this.app.use('/api/v1/tasker', router);
+  }
+}
 
-const app: Express = express();
-app.use(express.json());
-
-app.get("/", (req: Request, res: Response) => {
-  res.send("Express + TypeScript Server");
-});
-
-export default app;
-
+export default new Application();

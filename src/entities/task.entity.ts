@@ -2,16 +2,39 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from "typeorm";
+import { User } from "./user.entity";
 
-@Entity()
+export enum StatusEnum {
+  'pending' = 'PENDING',
+  'done' = 'DONE',
+  'edited' = 'EDITED',
+  'arquived' = 'ARQUIVED'
+}
+
+@Entity('Tasks')
 export class Task {
   @PrimaryGeneratedColumn('uuid', { name: 'tast_id' })
   id: string;
 
-  @Column({ name: 'title', type: 'varchar', length: '40' })
+  @Column({ name: 'title', type: 'varchar', length: '40', unique: true, })
   title: string;
 
-  @Column({ name: 'content', type: 'text'})
-  content: string;
+  @Column({ name: 'content', type: 'text', nullable: true })
+  content?: string;
+
+  @Column({ name: 'status', type: 'enum', enum: StatusEnum,  default: StatusEnum.pending })
+  status: StatusEnum;
+
+  @ManyToOne(() => User, (task) => task.tasks)
+  user: User;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp'})
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp'})
+  updatedAt: Date;
 }

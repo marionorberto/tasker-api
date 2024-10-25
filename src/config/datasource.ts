@@ -7,7 +7,7 @@ const myDataSourceConfig = new DataSource({
     username: "marionorberto",
     password: "cavera?@mau",
     database: "tasker",
-    entities: ["../entities/*.entity{*.ts,*.js}"],
+    entities:[`${__dirname}/../entities/**.entity{.ts,.js}`],
     logging: true,
     synchronize: true,
 });
