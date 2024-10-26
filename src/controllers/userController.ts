@@ -106,7 +106,7 @@ class UserController {
   async updateOne(req: Request, res: Response) {
      try {
         const { userId } = req.params; 
-        const { username, password } = req.body;
+        const { username = '', password = '' } = req.body;
 
         if (!userId)
           throw new Error('Id Not Provided');

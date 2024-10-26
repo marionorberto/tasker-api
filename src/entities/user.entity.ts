@@ -5,8 +5,12 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  BeforeInsert,
+  BeforeUpdate,
 } from "typeorm";
 import { Task } from "./task.entity";
+
+import bcryptjs from 'bcryptjs';
 
 @Entity('Users')
 export class User {
@@ -27,4 +31,10 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp'})
   updatedAt: Date;
+
+  @BeforeUpdate()
+  @BeforeInsert()
+  async hashPassword() {
+    this.password = await bcryptjs.hash(this.password, 10);
+  }
 }
