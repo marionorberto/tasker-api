@@ -3,6 +3,13 @@
 /node_modules
 /build
 
+# Ignorar o arquivo .env
+.env
+
+# Ignorar a pasta node_modules
+node_modules/
+
+
 file.txt
 todolist.txt
 
