@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>TASKER API</h1>
+  <h1>TASKER-API</h1>
 </div>
 <br />
 <!-- TABLE OF CONTENTS -->
@@ -129,7 +129,7 @@ Distributed under the MIT License.
 
 
 ## Contact
-Mário Norberto - [@marionorberto](https://linkedin.com/in/marionorberto) - marionorberto@example.com
+Mário Norberto - [@linkedin.com/in/marionorberto](https://linkedin.com/in/marionorberto) - marionorberto2018@gmail.com
 
 Project Link: [https://github.com/marionorberto/postable](https://github.com/marionorberto/tasker)
 
