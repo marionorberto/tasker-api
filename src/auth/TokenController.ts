@@ -10,15 +10,15 @@ class TokenController {
   async signIn(req: Request, res: Response ) {
     const userRepo = datasource.getRepository(User);
     
-    const { username = '', password = '' } = req.body;
+    const { email = '', password = '' } = req.body;
 
-    if (!username || !password) {
+    if (!email || !password) {
       return res.status(401).json({
         errors: ['invalid credencials'],
       });
     }
 
-    const user = await userRepo.findOne({ where: { username } });
+    const user = await userRepo.findOne({ where: { email } });
 
     if (!user) {
       return res.status(401).json({
@@ -33,7 +33,7 @@ class TokenController {
     }
 
     const { id } = user;
-    const token = jwt.sign({ id, username }, process.env.TOKEN_SECRET, {
+    const token = jwt.sign({ id, email }, process.env.TOKEN_SECRET, {
       expiresIn: process.env.TOKEN_EXPIRATION,
     });
 

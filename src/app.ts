@@ -3,6 +3,7 @@ import express, {
 } from 'express';
 import myDataSourceConfig  from './config/datasource';
 import router from './routes/routes';
+import cors from 'cors';
 require('dotenv/config');
 
 class Application {
@@ -19,6 +20,7 @@ class Application {
     myDataSourceConfig;
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(cors())
     this.app.use('/api/v1/tasker', router);
   }
 }

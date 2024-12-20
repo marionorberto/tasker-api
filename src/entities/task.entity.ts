@@ -29,6 +29,10 @@ export class Task {
   @Column({ name: 'status', type: 'enum', enum: StatusEnum,  default: StatusEnum.pending })
   status: StatusEnum;
 
+  @Column({ name: 'done', type: 'boolean',  default: false })
+  done: boolean;
+  
+
   @ManyToOne(() => User, (task) => task.tasks)
   user: User;
 

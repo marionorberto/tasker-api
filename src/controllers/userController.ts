@@ -3,7 +3,7 @@ import  datasource from '../config/datasource';
 import { User } from '../entities/user.entity';
 
 interface UserInterface {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -41,23 +41,46 @@ class UserController {
 
     async create(req: Request, res: Response) {
       try {
-        const { username, password }: UserInterface = req.body; 
+        const { email, password } : UserInterface = req.body; 
         const userRepo = datasource.getRepository(User);
 
-        const userToSave = userRepo.create({ username, password });
+        if(!email || !password) 
+          throw new Error('user already exists');
+        
+        if(password.length < 8 && password.length > 20)
+          throw new Error('password must have between 8 to 20 caracteres');
+        
+        const userAlreadyExists = await userRepo.findOneBy({
+            email
+        });
+
+        if(userAlreadyExists)
+          throw new Error('user already exists');
+
+        const userToSave = userRepo.create({ email, password });
 
         const userSaved = await userRepo.save(userToSave);
   
       res.json([
         {
           statusCode: 200,
-          message: 'user createds sucessfully',
+          message: 'user created sucessfully',
           data: userSaved,
           timestamp: Date.now()
         }
       ]);
     } catch(error) {
-        console.log(`error trying to create user | ${error.message}`)
+        console.log(`error trying to create user | ${error.message}`);
+
+           res.json(
+         {
+          statusCode: 400,
+          message: 'failed to create user',
+          error: error.message,
+          timestamp: Date.now()
+        }
+        ).status(400);
+
     }
   }
   
@@ -70,11 +93,11 @@ class UserController {
 
         const userRepo = datasource.getRepository(User);
 
-        const { id, username } = await userRepo.findOneBy({
+        const { id, email } = await userRepo.findOneBy({
             id: userId,
         });
 
-        if (!username) 
+        if (!email) 
           throw new Error('User Not Found');
 
   
@@ -84,7 +107,7 @@ class UserController {
             message: 'user fecthed sucessfully',
             data: {
               id,
-              username,
+              email,
             },
             timestamp: Date.now()
         }
@@ -106,12 +129,12 @@ class UserController {
   async updateOne(req: Request, res: Response) {
      try {
         const { userId } = req.params; 
-        const { username = '', password = '' } = req.body;
+        const { email = '', password = '' } = req.body;
 
         if (!userId)
           throw new Error('Id Not Provided');
 
-        if (!username && !password)
+        if (!email && !password)
           throw new Error('Username/Password is required for Updating');
 
         const userRepo = datasource.getRepository(User);
@@ -123,7 +146,7 @@ class UserController {
         if (!user) 
           throw new Error('User Not Found');
 
-          await userRepo.update(user.id, { username, password } );
+          await userRepo.update(user.id, { email, password } );
         const userUpdated = await userRepo.findOneBy({
             id: userId,
         });

@@ -3,6 +3,7 @@ import { Task } from '../entities/task.entity';
 import datasource from '../config/datasource';
 import { User } from '../entities/user.entity';
 import { StatusEnum } from '../entities/task.entity';
+import { CustomRequest } from '../interfaces/interfaces';
 
 
 class TasksController {
@@ -36,15 +37,15 @@ class TasksController {
     }
   } 
 
-    async create(req: Request, res: Response) {
+    async create(req: CustomRequest, res: Response) {
       try {
-
-        const { title, content, userId } = req.body; 
+        const { id } = req.user;
+        const { title, content } = req.body; 
         const taskRepo = datasource.getRepository(Task);
         const userRepo = datasource.getRepository(User);
 
         const userData = await userRepo.findOneBy({
-            id: userId,
+            id,
         });
 
         if (!userData) 
@@ -114,7 +115,7 @@ class TasksController {
     }
   }
 
-  async updateOne(req: Request, res: Response) {
+  async updateOne(req: CustomRequest, res: Response) {
      try {
         const { taskId } = req.params; 
         const { title, content } = req.body;
@@ -123,8 +124,11 @@ class TasksController {
           throw new Error('Id Not Provide');
         
         if (!title && !content)
-          throw new Error('title or content Not Provide');
-          
+          throw new Error('title and content Not Provide');
+
+        if (!title)
+          throw new Error('title Not Provide');
+       
         const taskRepo = datasource.getRepository(Task);
 
         const task = await taskRepo.findOneBy({
@@ -134,7 +138,12 @@ class TasksController {
         if (!task) 
           throw new Error('Task Not Found');
 
-          await taskRepo.update(task.id, { title, content } );
+          await taskRepo.update(task.id, { 
+            title,
+            content,
+            done: false,
+            status: StatusEnum.edited
+          });
         
         const taskUpdated = await taskRepo.findOneBy({
             id: taskId,
@@ -200,33 +209,28 @@ class TasksController {
         ).status(400);
     }
   }
-  async getUserTasks(req: Request, res: Response) {
+  async getUserTasks(req: CustomRequest, res: Response) {
     try {
-      const { userId } = req.params;
+      const { id } = req.user;
       const userRepo = datasource.getRepository(User);
-
-      if(!userId)
-        throw new Error('userId and taskId are required');
-
-      const userExists = await userRepo.findOneBy({
-        id: userId,
-      });
-
-      if (!userExists) 
-        throw new Error('User Not Found');
 
       const userTasks = await userRepo.find({
         where: {
-          id: userId,
+          id,
         },
         relations: {
           tasks: true,
+        },
+        order: {
+          tasks: {
+            createdAt: 'DESC'
+          }
         }
       });
 
       let count = 0;
 
-      userTasks.forEach((val, index) => {
+      userTasks.forEach((val) => {
         count = val.tasks.length;
       })
 
@@ -257,16 +261,14 @@ class TasksController {
     }
   }
 
-  async getDoneTasks(req: Request, res: Response) {
+  async getDoneTasks(req: CustomRequest, res: Response) {
     try {
-      const { userId } = req.params;
+      const { id } = req.user;
       const userRepo = datasource.getRepository(User);
-
-      if(!userId)
-        throw new Error('userId is required');
+      console.log(id);
 
       const userExists = await userRepo.findOneBy({
-        id: userId,
+        id,
       });
 
       if (!userExists) 
@@ -274,9 +276,9 @@ class TasksController {
 
       const userTasks = await userRepo.find({
         where: {
-          id: userId,
+          id,
           tasks: {
-            status: StatusEnum.done,
+            done: true,
           }
         },
         relations: {
@@ -316,16 +318,14 @@ class TasksController {
         ).status(400);
     }
   }
-  async getEditedTasks(req: Request, res: Response) {
+
+  async getEditedTasks(req: CustomRequest, res: Response) {
     try {
-      const { userId } = req.params;
+      const { id } = req.user;
       const userRepo = datasource.getRepository(User);
 
-      if(!userId)
-        throw new Error('userId is required');
-
       const userExists = await userRepo.findOneBy({
-        id: userId,
+        id,
       });
 
       if (!userExists) 
@@ -333,7 +333,7 @@ class TasksController {
 
       const userTasks = await userRepo.find({
         where: {
-          id: userId,
+          id,
           tasks: {
             status: StatusEnum.edited,
           }
@@ -345,7 +345,7 @@ class TasksController {
 
       let count = 0;
 
-      userTasks.forEach((val, index) => {
+      userTasks.forEach((val) => {
         count = val.tasks.length;
       })
 
@@ -376,16 +376,13 @@ class TasksController {
     }
   }
  
-  async getArquivedTasks(req: Request, res: Response) {
+  async getArquivedTasks(req: CustomRequest, res: Response) {
     try {
-      const { userId } = req.params;
+      const { id } = req.user;
       const userRepo = datasource.getRepository(User);
 
-      if(!userId)
-        throw new Error('userId is required');
-
       const userExists = await userRepo.findOneBy({
-        id: userId,
+        id,
       });
 
       if (!userExists) 
@@ -393,7 +390,7 @@ class TasksController {
 
       const userTasks = await userRepo.find({
         where: {
-          id: userId,
+          id,
           tasks: {
             status: StatusEnum.arquived,
           }
@@ -405,7 +402,7 @@ class TasksController {
 
       let count = 0;
 
-      userTasks.forEach((val, index) => {
+      userTasks.forEach((val) => {
         count = val.tasks.length;
       })
 
@@ -436,16 +433,13 @@ class TasksController {
     }
   }
 
-  async getPendingTasks(req: Request, res: Response) {
+  async getPendingTasks(req: CustomRequest, res: Response) {
     try {
-      const { userId } = req.params;
+      const { id } = req.user;
       const userRepo = datasource.getRepository(User);
 
-      if(!userId)
-        throw new Error('userId is required');
-
       const userExists = await userRepo.findOneBy({
-        id: userId,
+        id,
       });
 
       if (!userExists) 
@@ -453,7 +447,7 @@ class TasksController {
 
       const userTasks = await userRepo.find({
         where: {
-          id: userId,
+          id,
           tasks: {
             status: StatusEnum.pending,
           }
@@ -465,7 +459,7 @@ class TasksController {
 
       let count = 0;
 
-      userTasks.forEach((val, index) => {
+      userTasks.forEach((val) => {
         count = val.tasks.length;
       })
 
@@ -674,6 +668,101 @@ class TasksController {
           timestamp: Date.now()
         }
         ).status(400);
+    }
+  }
+
+  async checkTask(req: CustomRequest, res: Response) {
+    try {
+
+      const { taskId } = req.params; 
+      const { done } = req.body;
+
+      console.log(taskId, done);
+      if (!taskId)
+        throw new Error('Id Not Provide');
+        
+      const taskRepo = datasource.getRepository(Task);
+
+      const task = await taskRepo.findOneBy({
+          id: taskId,
+      });
+
+      if (!task) 
+        throw new Error('Task Not Found');
+        
+      if(done) {
+        await taskRepo.update(task.id, { done, status: StatusEnum.done } );
+      } else {
+        await taskRepo.update(task.id, { done, status: StatusEnum.pending } );
+      }           
+        
+      const taskUpdated = await taskRepo.findOneBy({
+        id: taskId,
+      });
+        
+      res.json([ 
+        {
+          statusCode: 200,
+          message: 'task updated sucessfully',
+          data: taskUpdated,
+          timestamp: Date.now()
+      }
+    ]);
+  } catch(error) {
+      console.log(`error trying to update task | ${error.message}`);
+
+      res.json(
+        {
+          statusCode: 400,
+          message: 'failed to update task',
+          error: error.message,
+          timestamp: Date.now()
+       }
+      ).status(400);
+    }
+  }
+
+  async uncheckTask(req: CustomRequest, res: Response) {
+    try {
+      const { taskId } = req.params; 
+
+      if (!taskId)
+        throw new Error('Id Not Provide');
+        
+      const taskRepo = datasource.getRepository(Task);
+
+      const task = await taskRepo.findOneBy({
+          id: taskId,
+      });
+
+      if (!task) 
+        throw new Error('Task Not Found');
+            
+        await taskRepo.update(task.id, { done: false } );
+        
+      const taskUpdated = await taskRepo.findOneBy({
+        id: taskId,
+      });
+        
+      res.json([ 
+        {
+          statusCode: 200,
+          message: 'task updated sucessfully',
+          data: taskUpdated,
+          timestamp: Date.now()
+      }
+    ]);
+  } catch(error) {
+      console.log(`error trying to update task | ${error.message}`);
+
+      res.json(
+        {
+          statusCode: 400,
+          message: 'failed to update task',
+          error: error.message,
+          timestamp: Date.now()
+       }
+      ).status(400);
     }
   }
 }

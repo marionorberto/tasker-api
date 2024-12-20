@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../entities/user.entity';
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import myDataSourceConfig from '../config/datasource';
+import { CustomRequest } from '../interfaces/interfaces';
 
-export default async (req: Request, res: Response, next: NextFunction) => {
+export default async (req: CustomRequest, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
 
   if (!authorization) {
@@ -13,14 +14,15 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   }
 
   const [, token] = authorization.split(' ');
+
   try {
-    const data = jwt.verify(token, process.env.TOKEN_SECRET);
-    const { id, username } = data;
+    const payload = jwt.verify(token, process.env.TOKEN_SECRET);
+    const { id, email } = payload;
 
     const userRepo = myDataSourceConfig.getRepository(User);
 
     const user = await userRepo.findOne({ where: {
-      id, username 
+      id, email 
     }
     });
 
@@ -30,10 +32,9 @@ export default async (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
-    // req.user = id;
-    // req.userUsername = username;
+    req.user = payload;
 
-    return next();
+    next();
   } catch (err) {
     return res.status(401).json({
       errors: ['invalid or expired token'],
